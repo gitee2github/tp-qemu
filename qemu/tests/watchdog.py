@@ -3,6 +3,7 @@ import re
 import time
 import logging
 import random
+import platform
 
 from avocado.utils import process
 from virttest import error_context
@@ -168,8 +169,12 @@ def run(test, params, env):
         """
         qemu_binary = utils_misc.get_qemu_binary(params)
 
-        watchdog_type_check = params.get(
-            "watchdog_type_check", " -watchdog '?'")
+        if "aarch" in platform.machine():
+            machine_type = params.get("machine_type").split(':', 1)[1]
+            watchdog_arg = " -M %s -watchdog '?'" % machine_type
+        else:
+            watchdog_arg = " -watchdog '?'"
+        watchdog_type_check = params.get("watchdog_type_check", watchdog_arg)
         qemu_cmd = qemu_binary + watchdog_type_check
 
         # check the host support watchdog types.
