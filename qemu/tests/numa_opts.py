@@ -15,7 +15,10 @@ def run(test, params, env):
 
     dbg("starting numa_opts test...")
 
+    params["smp"] = params.get("smp_override")
+    params["mem"] = params.get("mem_override")
     vm = env.get_vm(params["main_vm"])
+    vm.create(params=params)
 
     numa = vm.monitors[0].info_numa()
     dbg("info numa reply: %r", numa)
