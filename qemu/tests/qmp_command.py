@@ -113,6 +113,9 @@ def run(test, params, env):
         elif result_check == "contain":
             for o in expect_o:
                 if isinstance(o, dict):
+                    if 'device' in o and not check_list(qmp_o, 'device', o['device']):
+                        o['node-name'] = o['device']
+                        del o['device']
                     for key, val in o.items():
                         result = check_list(qmp_o, key, val)
                         if not result:
