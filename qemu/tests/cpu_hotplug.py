@@ -173,5 +173,4 @@ def run(test, params, env):
             session.cmd("echo %s > /proc/irq/%s/smp_affinity" % (irq_mask, irq))
         for online_file in online_files:
             session.cmd("echo 0 > %s" % online_file)
-        for online_file in online_files:
             session.cmd("echo 1 > %s" % online_file)
