@@ -1,5 +1,6 @@
 import re
 import logging
+import platform
 
 from virttest import error_context
 from virttest import utils_package
@@ -96,14 +97,15 @@ def run(test, params, env):
                 test.error("Could not find node %s in guest." % node_id)
         logging.info("Number of each CPU in guest matches what we assign.")
 
-        for vcpu_dev in vcpu_devices[::-1]:
-            error_context.context("hotunplug vcpu device: %s" % vcpu_dev,
-                                  logging.info)
-            vm.hotunplug_vcpu_device(vcpu_dev)
-        if vm.get_cpu_count() != vm.cpuinfo.smp:
-            test.fail("Actual number of guest CPUs is not equal to the "
-                      "expected.")
-        if get_guest_numa_cpus_info() != numa_before_plug:
-            logging.debug("Current guest numa info:\n%s",
-                          session.cmd_output("numactl -H"))
-            test.fail("Numa info of guest is incorrect after vcpu hotunplug.")
+        if platform.machine() != 'aarch64':
+            for vcpu_dev in vcpu_devices[::-1]:
+                error_context.context("hotunplug vcpu device: %s" % vcpu_dev,
+                                      logging.info)
+                vm.hotunplug_vcpu_device(vcpu_dev)
+            if vm.get_cpu_count() != vm.cpuinfo.smp:
+                test.fail("Actual number of guest CPUs is not equal to the "
+                          "expected.")
+            if get_guest_numa_cpus_info() != numa_before_plug:
+                logging.debug("Current guest numa info:\n%s",
+                              session.cmd_output("numactl -H"))
+                test.fail("Numa info of guest is incorrect after vcpu hotunplug.")

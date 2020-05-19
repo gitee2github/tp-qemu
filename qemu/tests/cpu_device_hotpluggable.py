@@ -1,5 +1,5 @@
 import logging
-
+import platform
 from provider import cpu_utils
 
 from aexpect import ShellCmdError
@@ -103,8 +103,10 @@ def run(test, params, env):
         error_context.context("Pause guest to hotunplug all vcpu devices",
                               logging.info)
         vm.pause()
-        sub_hotunplug()
-        error_context.context("Resume guest after hotunplug")
+        #aarch64 do not support vcpu hot-unplug by now.
+        if platform.machine() != 'aarch64':
+            sub_hotunplug()
+            error_context.context("Resume guest after hotunplug")
         vm.resume()
 
     login_timeout = params.get_numeric("login_timeout", 360)
@@ -127,8 +129,9 @@ def run(test, params, env):
         pluggable_vcpu_dev = vcpu_devices
         pluggable_vcpu = vcpus_count * len(pluggable_vcpu_dev)
     else:
-        pluggable_vcpu_dev = vcpu_devices[::-1]
-        pluggable_vcpu = -(vcpus_count * len(pluggable_vcpu_dev))
+        if platform.machine() != 'aarch64':
+            pluggable_vcpu_dev = vcpu_devices[::-1]
+            pluggable_vcpu = -(vcpus_count * len(pluggable_vcpu_dev))
     expected_vcpus = vm.get_cpu_count() + pluggable_vcpu
 
     if params.get("pause_vm_before_hotplug", "no") == "yes":
@@ -154,7 +157,8 @@ def run(test, params, env):
             session.close()
         if ("hotunplug" in params.objects("sub_test_after_migrate")
                 or sub_test_type == "pause_resume"):
-            expected_vcpus -= pluggable_vcpu
+            if platform.machine() != 'aarch64':
+                expected_vcpus -= pluggable_vcpu
 
     if vm.is_alive():
         session = vm.wait_for_login(timeout=login_timeout)

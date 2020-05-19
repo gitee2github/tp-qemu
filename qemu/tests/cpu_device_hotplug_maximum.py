@@ -95,12 +95,14 @@ def run(test, params, env):
     if not cpu_utils.check_guest_cpu_topology(session, os_type, cpuinfo):
         test.fail("CPU topology of guest is not as expected after reboot.")
 
-    error_context.context("Hotunplug all vCPU devices", logging.info)
-    for vcpu_device in reversed(vcpu_devices):
-        vm.hotunplug_vcpu_device(vcpu_device)
-    if not utils_misc.wait_for(lambda: vm.get_cpu_count() == smp,
-                               verify_wait_timeout, first=5, step=10):
-        logging.error(not_equal_text, vm.get_cpu_count(), smp)
-        test.fail(mismatch_text)
-    logging.info("CPU quantity is as expected after hotunplug: %s", smp)
+    # aarch64 do not support vcpu hot-unplug by now.
+    if platform.machine() != 'aarch64':
+        error_context.context("Hotunplug all vCPU devices", logging.info)
+        for vcpu_device in reversed(vcpu_devices):
+            vm.hotunplug_vcpu_device(vcpu_device)
+        if not utils_misc.wait_for(lambda: vm.get_cpu_count() == smp,
+                                   verify_wait_timeout, first=5, step=10):
+            logging.error(not_equal_text, vm.get_cpu_count(), smp)
+            test.fail(mismatch_text)
+        logging.info("CPU quantity is as expected after hotunplug: %s", smp)
     session.close()

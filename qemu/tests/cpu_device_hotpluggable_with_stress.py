@@ -2,6 +2,7 @@ import re
 import time
 import random
 import logging
+import platform
 
 from provider import cpu_utils
 
@@ -88,14 +89,16 @@ def run(test, params, env):
                                "%.2f%%" % (cpu_id, cpu_usage_rate))
                 logging.info("Usage rate of vCPU(%s) is: %.2f%%", cpu_id,
                              cpu_usage_rate)
-        for vcpu_dev in vcpu_devices:
-            error_context.context("Hotunplug vcpu device: %s" % vcpu_dev,
-                                  logging.info)
-            vm.hotunplug_vcpu_device(vcpu_dev)
-            # Drift the running stress task to other vCPUs
-            time.sleep(random.randint(5, 10))
-        if vm.get_cpu_count() != smp:
-            test.fail("Actual number of guest CPUs is not equal to expected")
+        # aarch64 do not support vcpu hot-unplug by now.
+        if platform.machine() != 'aarch64':
+            for vcpu_dev in vcpu_devices:
+                error_context.context("Hotunplug vcpu device: %s" % vcpu_dev,
+                                      logging.info)
+                vm.hotunplug_vcpu_device(vcpu_dev)
+                # Drift the running stress task to other vCPUs
+                time.sleep(random.randint(5, 10))
+            if vm.get_cpu_count() != smp:
+                test.fail("Actual number of guest CPUs is not equal to expected")
         stress_tool.unload_stress()
         stress_tool.clean()
     else:
