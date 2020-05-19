@@ -1,5 +1,6 @@
 import re
 import logging
+import platform
 from os import uname
 
 from avocado.utils import cpu
@@ -28,7 +29,10 @@ def run(test, params, env):
     :param env:    Dictionary with test environment.
     """
     os_type = params["os_type"]
-    machine_type = params["machine_type"]
+    if platform.machine() == 'aarch64':
+        machine_type = params["machine_type"].split(':', 1)[1]
+    else:
+        machine_type = params["machine_type"]
     reboot_timeout = params.get_numeric("reboot_timeout")
     mismatch_text = "Actual number of guest CPUs is not equal to the expected"
     not_equal_text = "CPU quantity mismatched! Guest got %s but expected is %s"
