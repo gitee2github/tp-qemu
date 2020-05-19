@@ -158,8 +158,19 @@ def run(test, params, env):
     # several times
     irq = 15
     irq_mask = "f0"
+    # if default irq num(15) is not exist, need verfiy another.
+    cmd = 'ls -l /proc/irq/15/smp_affinity'
+    status = session.cmd_status(cmd)
+    if status == 0:
+        irq = 15
+    else:
+        cmd = "cat /proc/interrupts | grep virtio[0-9]-input.0 | head -1 | awk -F ':' '{print$1}'"
+        irq = session.cmd_output(cmd).replace('\n','').replace(' ','')
+        if not irq:
+            logging.warn("Can not find irq number for virtio device, please check")
     for i in range(onoff_iterations):
-        session.cmd("echo %s > /proc/irq/%s/smp_affinity" % (irq_mask, irq))
+        if irq:
+            session.cmd("echo %s > /proc/irq/%s/smp_affinity" % (irq_mask, irq))
         for online_file in online_files:
             session.cmd("echo 0 > %s" % online_file)
         for online_file in online_files:
