@@ -1,6 +1,7 @@
 import re
 import logging
 import platform
+import multiprocessing
 from os import uname
 
 from avocado.utils import cpu
@@ -45,6 +46,10 @@ def run(test, params, env):
     supported_maxcpus = (params.get_numeric("vcpu_maxcpus") or
                          utils_qemu.get_maxcpus_hard_limit(qemu_binary,
                                                            current_machine))
+    host_cpu = int(multiprocessing.cpu_count())
+    maxcpus = 3 * host_cpu
+    supported_maxcpus = min(maxcpus, supported_maxcpus)
+
     if not params.get_boolean("allow_pcpu_overcommit"):
         supported_maxcpus = min(supported_maxcpus, cpu.online_cpus_count())
 
