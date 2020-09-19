@@ -10,11 +10,11 @@ from virttest import utils_test
 
 def get_macvtap_device_on_ifname(ifname):
     macvtaps = []
-    ip_link_out = process.system_output("ip -d link show")
+    ip_link_out = process.system_output("ip -d link show").decode()
     re_str = r"(\S*)@%s" % ifname
     devices = re.findall(re_str, ip_link_out)
     for device in devices:
-        out = process.system_output("ip -d link show %s" % device)
+        out = process.system_output("ip -d link show %s" % device).decode()
         if "macvtap  mode" in out:
             macvtaps.append(device)
     return macvtaps
@@ -75,7 +75,7 @@ def run(test, params, env):
                               logging.info)
         check_cmd = " ip -d link show %s" % macvtap_name
         try:
-            tap_info = process.system_output(check_cmd, timeout=240)
+            tap_info = process.system_output(check_cmd, timeout=240).decode()
         except process.CmdError:
             err = "Fail to create %s mode macvtap on %s" % (mode, ifname)
             test.fail(err)
@@ -89,7 +89,7 @@ def run(test, params, env):
         dest_host_get_cmd = "ip route | awk '/default/ { print $3 }'"
         dest_host_get_cmd = params.get("dest_host_get_cmd", dest_host_get_cmd)
         dest_host = process.system_output(
-            dest_host_get_cmd, shell=True).split()[-1]
+            dest_host_get_cmd, shell=True).decode().split()[-1]
 
     txt = "Ping dest host %s from " % dest_host
     txt += "localhost with the interface %s" % ifname
