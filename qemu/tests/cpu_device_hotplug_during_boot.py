@@ -1,4 +1,5 @@
 import logging
+import platform
 
 from virttest import error_context
 
@@ -33,7 +34,8 @@ def run(test, params, env):
     error_context.base_context("Hotplug vCPU devices during boot stage.",
                                logging.info)
     error_context.context("Verify guest is in the boot stage.", logging.info)
-    vm.serial_console.read_until_any_line_matches(boot_patterns)
+    if platform.machine() != 'aarch64':
+        vm.serial_console.read_until_any_line_matches(boot_patterns)
 
     error_context.context("Hotplug vCPU devices, waiting for guest alive.",
                           logging.info)
